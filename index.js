@@ -1,107 +1,55 @@
-// // work with pathes in OPERATIONAL systems
-// os
-//
-// const path = require('path');
-//
-// const path2file = ['dir1', 'dir2', 'dir3', 'file.txt'].join(path.sep)
-// const path2file2 = path.join('dir1','dir2', 'dir3', 'file.txt')
-//
-// const absPath = path.resolve('bin', 'fsn')
-// path.dirname(absPath)// full path without bin
-// path.extname(path2file2)
-// console.log(path.parse(path.resolve('name.txt')))
-//
-// // _________________________________________________________________
-//
-//
-// const fs = require('fs');
-// //syncron
-// try {
-//   fs.readFile('name', function() {
-//
-//   })
-// } catch(err){
-//   //...
-// }
-//
-// fs.readFile('name', function() {
-//   if(err) return console.error(err);
-//
-// })
-//
-//
-// // отправка сообщений по чанкам из файлов
-// fs.createReadStream('name').pipe(process.stdout);
-// // прочитывание из файла и запись в другой файл
-// fs.createReadStream('name').pipe(fs.createWriteStream('name2'));
-//
-// fs.writeFile('name', 'str', function(err) {
-//   if (err) { return ... }
-// })
-//
-// fs.stat()
-//   .isFile()
-//   .isDirectory()
-//   .isSocket()
-//
-//
-// // owner writes
-// fs.chown()
-// // modificate writes
-// fs.chmod()
-//
-// fs.read()
-// fs.readdir()
-//
-// // удаление файла
-// fs.unlink()
-//
-// // создание директорий
-// mkdirp
-// mv
-// del
-//
-// // watch files
-// chokidar
-
-
-const http = require('http');
-const fs = require('fs');
+const path = require('path');
+const express = require('express');
+const serveFavicon = require('serve-favicon');
+const serveStatic = require('serve-static');
+const got = require('got');
+const jsdom = require("jsdom");
+const xray = require('x-ray');
 const cheerio = require('cheerio');
+const app = express();
+const request = require('request');
+const port = 5555
 
-// node request redirects, promises, streams, retries, automagically handling gzip/deflate
-// const got = require('got');
+app
+    .use(serveFavicon(path.join('static', 'favicon.ico')))
+    .use(serveStatic(path.join('static')))
+    .get('/', function (req, res) {
 
-http.createServer((req, res) => {
+      got('http://netvertise.co.il/')
+          .then(response => {
+            let html = response.body;
+            let $ = cheerio.load(html)
 
-  if(req.url === '/favicon.ico') {
-    res.writeHead(404);
-    res.end();
-    return
-  }
-  res.writeHead(200, {'Content-Type':'text/html'})
 
-  http.get('http://netvertise.co.il/jobs', itc => {
-    var $ = cheerio.load(itc),
-        a = $('a').html()
-        ;
-    console.log(itc);
+            res.send(html)
 
-    if (itc.statusCode !== 200) {
-      return console.log(itc.statusCode);
-    }
+            // links = $('a'); //jquery get all hyperlinks
+            // $(links).each(function(i, link){
+            //   res.s($(link).text() + ':\n  ' + $(link).attr('href'));
+            // });
 
-    itc.setEncoding('utf8');
 
-    let data='';
 
-    itc.on('data', chunk => data += chunk)
-    itc.on('end', () => {
-      res.end(data);
+            // var request = require('request');
+            // var cheerio = require('cheerio');
+            // var searchTerm = 'screen+scraping';
+            // var url = 'http://www.bing.com/search?q=' + searchTerm;
+            // request(url, function(err, resp, body){
+            //   $ = cheerio.load(body);
+            //   links = $('a'); //jquery get all hyperlinks
+            //   $(links).each(function(i, link){
+            //     console.log($(link).text() + ':\n  ' + $(link).attr('href'));
+            //   });
+            // });
+
+          })
+          .catch(error => {console.log(error.response.body)});
+
+      // res.send('Hello World!')
     })
-
-    itc.on('error', err => {
-      console.error(err);
+    .post('/', function (req, res) {
+      res.send('Got a POST request')
     })
-  })
-}).listen(7777)
+    .listen(port);
+
+console.log(`Server is running on ${port}`);

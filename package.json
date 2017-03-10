@@ -11,6 +11,14 @@
   "license": "ISC",
   "dependencies": {
     "cheerio": "^0.22.0",
-    "http": "0.0.0"
+    "express": "^4.15.2",
+    "fs": "0.0.1-security",
+    "got": "^6.7.1",
+    "jsdom": "^9.11.0",
+    "path": "^0.12.7",
+    "request": "^2.81.0",
+    "serve-favicon": "^2.4.1",
+    "serve-static": "^1.12.1",
+    "x-ray": "^2.3.2"
   }
 }
