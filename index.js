@@ -1,55 +1,47 @@
 const path = require('path');
+const url = require('url');
 const express = require('express');
 const serveFavicon = require('serve-favicon');
 const serveStatic = require('serve-static');
 const got = require('got');
-const jsdom = require("jsdom");
-const xray = require('x-ray');
 const cheerio = require('cheerio');
 const app = express();
-const request = require('request');
-const port = 5555
+const port = process.env.PORT || 5555;
 
 app
     .use(serveFavicon(path.join('static', 'favicon.ico')))
     .use(serveStatic(path.join('static')))
     .get('/', function (req, res) {
+        const root = req.query.url;
+        if (!root) {
+            return res.send('Please specify url');
+        }
 
-      got('http://netvertise.co.il/')
-          .then(response => {
-            let html = response.body;
-            let $ = cheerio.load(html)
+        got(root)
+            .then(response => {
+                const html = response.body;
+                const $ = cheerio.load(html);
+                const links = $('a');
+                const result = [];
+                links.each(function(i, link){
+                    const $link = $(link);
+                    if (!$link.attr('href')) return;
 
+                    const href = url.resolve(root, $link.attr('href'));
 
-            res.send(html)
+                    result.push(`<a href="${href}">${$link.text()}</a>`);
+                });
 
-            // links = $('a'); //jquery get all hyperlinks
-            // $(links).each(function(i, link){
-            //   res.s($(link).text() + ':\n  ' + $(link).attr('href'));
-            // });
-
-
-
-            // var request = require('request');
-            // var cheerio = require('cheerio');
-            // var searchTerm = 'screen+scraping';
-            // var url = 'http://www.bing.com/search?q=' + searchTerm;
-            // request(url, function(err, resp, body){
-            //   $ = cheerio.load(body);
-            //   links = $('a'); //jquery get all hyperlinks
-            //   $(links).each(function(i, link){
-            //     console.log($(link).text() + ':\n  ' + $(link).attr('href'));
-            //   });
-            // });
-
-          })
-          .catch(error => {console.log(error.response.body)});
-
-      // res.send('Hello World!')
+                res.send(result.join('<br>'));
+            })
+            .catch(error => {
+                console.error(error.response ? error.response.body : error);
+                res.status(500).send('Some error');
+            });
     })
     .post('/', function (req, res) {
-      res.send('Got a POST request')
+        res.send('Got a POST request');
     })
-    .listen(port);
-
-console.log(`Server is running on ${port}`);
+    .listen(port, () => {
+        console.log(`Server is running on ${port}`);
+    });
